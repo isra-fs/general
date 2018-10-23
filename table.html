@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="/socket.io/socket.io.js"></script>
+    <title>List Players</title>
+    <style>
+        .listPlayers {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .listPlayers td, .listPlayers th {
+            border: 1px solid #b8daff;
+            text-align: left;
+            padding: 8px;
+        }
+
+        .listPlayers  tr:nth-child(even) {
+            background-color: #b8daff;
+        }
+        progress::-webkit-progress-value { background:#a3640d; }
+    </style>
+</head>
+<body>
+    <button onclick="tableListPlayer.exportTableToExcel()">Export Table Data To Excel File</button>
+    <button onclick="tableListPlayer.sentNewPlayer()">Insert</button>
+    <table class="listPlayers" id="listPlayers">
+        <tr>
+            <thead>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Time</th>
+            </thead>
+        </tr>
+        <tbody>
+        </tbody>
+    </table>
+<div style="width:100%">
+    <progress min="0" max="10000" value="5012" id="funding" style="
+            width: 20%;
+    height: 40px;
+    transform: rotate(-90deg);
+    background-color: #a3640d;
+    position: fixed;
+    left: -164px;"></progress>
+</div>
+    
+</body>
+<script>
+    var tableListPlayer=     (function(){
+            var socket = io();
+            socket.on("listPlayers",(data)=>{
+                listPlayers(data);
+            })
+            socket.emit("getListPlayers",true);
+            var listPlayers =function(data){
+                var table = document.getElementById("listPlayers")
+                for(player in data){
+                    var tr= document.createElement("tr");
+                    var name =document.createElement("td");
+                    var mail =document.createElement("td");
+                    var time =document.createElement("td");
+                    name.innerHTML = data[player].name;
+                    mail.innerHTML = data[player].mail;
+                    time.innerHTML = data[player].time;;
+                    tr.appendChild(name);
+                    tr.appendChild(mail);
+                    tr.appendChild(time);
+                    table.appendChild(tr);
+                }
+            }
+           
+            return {
+                  exportTableToExcel:function(){
+                    var downloadLink;
+                    var dataType = 'application/vnd.ms-excel';
+                    var tableSelect = document.getElementById("listPlayers");
+                    var tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
+                    // Specify file name
+                    var  filename = filename?filename+'.xls':'excel_data.xls';
+                    // Create download link element
+                    downloadLink = document.createElement("a");
+                    document.body.appendChild(downloadLink);
+                    if(navigator.msSaveOrOpenBlob){
+                    var blob = new Blob(['\ufeff', tableHTML], {
+                        type: dataType
+                    });
+                    navigator.msSaveOrOpenBlob( blob, filename);
+                    }else{
+                        // Create a link to the file
+                        downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
+                        // Setting the file name
+                        downloadLink.download = filename;
+                        //triggering the function
+                        downloadLink.click();
+                    }
+                },
+                sentNewPlayer: function(){
+                    var name = "otro Nombre";
+                    var mail = "isra.fsol@gmail.com";
+                    var time = 55;
+                    var data = "name="+name+"&mail="+mail+"&time="+time;
+                    var xhr = new XMLHttpRequest();
+                    xhr.withCredentials = true;
+                    xhr.addEventListener("readystatechange", function () {
+                        if (this.readyState === 4) {
+                            console.log(this.responseText);
+                        }
+                    });
+                    xhr.open("POST", "http://localhost:3001/player");
+                    xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded");
+                    xhr.setRequestHeader("cache-control", "no-cache");
+                    xhr.setRequestHeader("postman-token", "5974cb88-d26b-faff-2758-5e2ee6a4f6c9");
+                    xhr.send(data);
+                 }
+            }
+        }())
+    </script>
+</html>
